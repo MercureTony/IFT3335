@@ -11,6 +11,8 @@
 ##   grid is a grid,e.g. 81 non-blank chars, e.g. starting with '.18...7...
 ##   values is a dict of possible values, e.g. {'A1':'12349', 'A2':'8', ...}
 
+from random import randrange
+
 def cross(A, B):
     "Cross product of elements in A and elements in B."
     return [a + b for a in A for b in B]
@@ -28,6 +30,10 @@ units = dict((s, [u for u in unitlist if s in u])
 peers = dict((s, set(sum(units[s], [])) - set([s]))
              for s in squares)
 
+columns = [cross(rows, c) for c in cols]
+lines = [cross(r, cols) for r in rows]
+boxes = dict((s, set(sum([units[s][2]],[]))-set([s]))
+             for s in squares)
 
 ################ Unit Tests ################
 
@@ -102,6 +108,40 @@ def eliminate(values, s, d):
                 return False
     return values
 
+############### Constraint propagation (in the boxes) for initialization of Hill Climbing ########################
+
+def assign_HC(values, s, d):
+    """Eliminate all the other values (except d) from values[s] and propagate in the box.
+    Return values, except return False if a contradiction is detected in the box."""
+    other_values = values[s].replace(d, '')
+    if all(eliminate_HC(values, s, d2) for d2 in other_values):
+        return values
+    else:
+        return False
+
+def eliminate_HC(values, s, d):
+    """Eliminate d from values[s]; propagate when values or places <= 2.
+    Return values, except return False if a contradiction is detected."""
+    if d not in values[s]:
+        return values ## Already eliminated
+    values[s] = values[s].replace(d,'')
+    ## (1) If a square s is reduced to one value d2, then eliminate d2 from the box.
+    if len(values[s]) == 0:
+        return False ## Contradiction: removed last value
+    elif len(values[s]) == 1:
+        d2 = values[s]
+        if not all(eliminate_HC(values, s2, d2) for s2 in boxes[s]):
+            return False
+    ## (2) If a unit u is reduced to only one place for a value d, then put it there.
+    for u in [units[s][2]]:
+        dplaces = [s for s in u if d in values[s]]
+        if len(dplaces) == 0:
+            return False ## Contradiction: no place for this value
+        elif len(dplaces) == 1:
+            # d can only be in one place in unit; assign it there
+            if not assign_HC(values, dplaces[0], d):
+                return False
+    return values
 
 ################ Display as 2-D grid ################
 
@@ -130,6 +170,77 @@ def search(values):
     n, s = min((len(values[s]), s) for s in squares if len(values[s]) > 1)
     return some(search(assign(values.copy(), s, d))
                 for d in values[s])
+
+########################### Hill Climbing ##################################333333
+
+def solve_hill_climbing(grid):
+    #met le compteur a zero a chaque nouvelle grille de sudoku
+    global try_counter
+    try_counter = 0
+    values = parse_grid(grid)
+    return hill_climbing(initialize_hill_climbing(values))
+
+def initialize_hill_climbing(values):
+    "En tenant compte seulement des boites, remplit chaque carre, avec au hasard, un des chiffre possibles"
+    new_values = values.copy()
+    #tant quil y a un carre vide
+    while max(len(new_values[s]) for s in squares) > 1:
+        ## Chose the unfilled square s with the fewest possibilities
+        n, s = min((len(new_values[s]), s) for s in squares if len(new_values[s]) > 1)
+        random_index = randrange(0, len(new_values[s]))
+        d = new_values[s][random_index]
+        assign_HC(new_values, s, d)
+    return new_values
+
+
+def hill_climbing(values):
+    "Using Hill-Climbing, try to find a solution"
+    currentNode = values
+    while(True):
+        L = neighbors(currentNode)
+        nextEval = float("-inf")
+        nextNode = None
+        for x in L:
+            if (evaluation(x) > nextEval):
+                nextNode = x
+                nextEval = evaluation(x)
+        if nextEval <= evaluation(currentNode):
+            #Return current node since no better neighbors exist
+            return currentNode
+        #print(evaluation(nextNode))
+        currentNode = nextNode
+
+        global try_counter
+        try_counter += 1
+
+def neighbors(currentNode):
+    """retourne une liste des voisins du noeuds
+    les voisins sont les noeuds obtenus en echangeant les chiffres de deux carres appartenant a la meme boite (36 possibilites par boite)"""
+    neighbors = []
+    done = []
+    for s in squares:
+        newNode = currentNode.copy()
+        box = boxes[s] - set(done)
+        for s2 in box:
+            newNode[s], newNode[s2] = newNode[s2], newNode[s]
+            neighbors.append(newNode)
+        done.append(s)
+    return neighbors
+
+def evaluation(values):
+    # l'evaluation est egal a: 0 - nb de conflit sur les lignes et colonnes
+    conflicts = 0
+    for line in lines:
+        l = []
+        for s in line:
+            l.append(values[s])
+        conflicts += len(set(l)) - 9
+    for column in columns:
+        c = []
+        for s in column:
+            c.append(values[s])
+        conflicts += len(set(c)) - 9
+    return conflicts
 
 
 ################ Utilities ################
@@ -210,6 +321,11 @@ hard1 = '.....6....59.....82....8....45........3........6..3.54...325..6........
 if __name__ == '__main__':
     test()
     solve_all(from_file("100sudoku.txt"), "100sudoku", None)
+    # Hill Climbing
+    solution_hc = solve_hill_climbing(grid2)
+    solved(solution_hc)
+    display(solution_hc)
+    solve_all(from_file("100sudoku.txt"), "hc", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("top95.txt"), "hard", None)

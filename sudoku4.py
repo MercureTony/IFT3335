@@ -11,7 +11,8 @@
 ##   grid is a grid,e.g. 81 non-blank chars, e.g. starting with '.18...7...
 ##   values is a dict of possible values, e.g. {'A1':'12349', 'A2':'8', ...}
 
-import math, time, random
+import time, random
+
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
@@ -29,10 +30,11 @@ unitlist = ([cross(rows, c) for c in cols] +
             [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')])
 units = dict((s, [u for u in unitlist if s in u])
              for s in squares)
-boxes = dict((s, set(sum([units[s][2]],[]))-set([s]))
+boxes = dict((s, set(sum([units[s][2]], [])) - set([s]))
              for s in squares)
 peers = dict((s, set(sum(units[s], [])) - set([s]))
              for s in squares)
+
 
 ################ Unit Tests ################
 
@@ -107,6 +109,23 @@ def eliminate(values, s, d):
                 return False
     return values
 
+
+def evaluation(values):
+    """The evaluation is equal to: 0 - number of conflicts on rows and columns"""
+    conflicts = 0  # Number of conflicts (-inf < conflicts =< 0)
+    for line in lines:  # We run through each row
+        filled_line = []
+        for s in line:  # We run through the row_i
+            filled_line.append(values[s])  # We append the value of box_ij
+        conflicts += len(set(filled_line)) - len(rows)  # We decrement the number of unfilled box in row
+    for column in columns:  # We run through each column
+        filled_column = []
+        for s in column:  # We run through the column_j
+            filled_column.append(values[s])  # We append the value of box_ij
+        conflicts += len(set(filled_column)) - len(cols)  # We decrement the number of unfilled box in column
+    return conflicts
+
+
 ################ Display as 2-D grid ################
 
 def display(values):
@@ -119,69 +138,60 @@ def display(values):
         if r in 'CF': print(line)
 
 
-########################### Hill Climbing ##################################333333
+######################## Hill Climbing ###############################
+
+## http://aima.cs.berkeley.edu/python/search.html
+## http://en.wikipedia.org/wiki/Hill_climbing_algorithm
+## https://github.com/aimacode/aima-pseudocode/blob/master/md/Hill-Climbing.md
 
 def solve_hill_climbing(grid):
     return hill_climbing(initialize_hill_climbing(parse_grid(grid)))
 
+
 def initialize_hill_climbing(values):
-    "Taking into account only the boxes, fill each square with one of the possible numbers at random"
-    new_values = values.copy()
-    #tant quil y a un carre vide
-    while max(len(new_values[s]) for s in squares) > 1:
-        ## Chose the unfilled square s with the fewest possibilities
-        n, s = min((len(new_values[s]), s) for s in squares if len(new_values[s]) > 1)
-        d = random.choice(new_values[s])
-        assign(new_values, s, d)
-    return new_values
+    """Taking into account only the boxes, fill each square with one of the possible numbers at random"""
+    updated_box = values.copy()
+    # As long as there is an empty square
+    while max(len(updated_box[s]) for s in squares) > 1:
+        # Choose the unfilled square s with the fewest possibilities
+        n, s = min((len(updated_box[s]), s) for s in squares if len(updated_box[s]) > 1)
+        d = random.choice(updated_box[s])
+        assign(updated_box, s, d)
+    return updated_box
 
 
 def hill_climbing(values):
-    "Using Hill-Climbing, try to find a solution"
-    currentNode = values
-    while(True):
-        L = neighbors(currentNode)
-        nextEval = float("-inf")
-        nextNode = None
-        for x in L:
-            if (evaluation(x) > nextEval):
-                nextNode = x
-                nextEval = evaluation(x)
-        if nextEval <= evaluation(currentNode):
-            #Return current node since no better neighbors exist
-            return currentNode
-        #print(evaluation(nextNode))
-        currentNode = nextNode
+    """From the initial node, keep choosing the neighbor with highest value,
+    stopping when no neighbor is better."""
+    current_grid = values
+    while True:
+        list_neighbors = neighbors(current_grid)
+        next_eval = float("-inf")  # We choose the smallest value for the iteration
+        next_square = None
+        for x in list_neighbors:  # We run through the list of neighbors
+            if evaluation(x) > next_eval:
+                next_square = x
+                next_eval = evaluation(x)
+        if next_eval <= evaluation(current_grid):  # If the next value is worse than the current value
+            return current_grid  # Return current grid since no better neighbors exist
+        current_grid = next_square
 
 
-def neighbors(currentNode):
-    """retourne une liste des voisins du noeuds
-    les voisins sont les noeuds obtenus en echangeant les chiffres de deux carres appartenant a la meme boite (36 possibilites par boite)"""
-    neighbors = []
+def neighbors(current_grid):
+    """Return a list of the neighbors of the node which is obtained by exchanging the numbers of two
+    squares belonging to the same box (36 possibilities per box)"""
+    list_neighbors = []
     done = []
-    for s in squares:
-        newNode = currentNode.copy()
-        box = boxes[s] - set(done)
+    for s in squares:  # We run through the sudoku
+        copy_current_grid = current_grid.copy()
+        # print(newNode)
+        box = boxes[s] - set(done)  # We remove the visited square
         for s2 in box:
-            newNode[s], newNode[s2] = newNode[s2], newNode[s]
-            neighbors.append(newNode)
-        done.append(s)
-    return neighbors
-
-## The evaluation is equal to: 0 - number of conflicts on rows and columns
-def evaluation(values):
-    conflicts = 0
-    for line in lines:
-        l = []
-        for s in line:
-            l.append(values[s])
-        conflicts += len(set(l)) - 9
-    for column in columns:
-        c = []
-        for s in column:
-            c.append(values[s])
-        conflicts += len(set(c)) - 9
-    return conflicts
+            copy_current_grid[s], copy_current_grid[s2] = copy_current_grid[s2], copy_current_grid[
+                s]  # Swap cell_ij with cell_kl
+            list_neighbors.append(copy_current_grid)  # We add the neighbor to the list
+        done.append(s)  # We mark the visited box
+    return list_neighbors
 
 
 ################ Utilities ################

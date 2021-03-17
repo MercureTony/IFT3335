@@ -25,22 +25,11 @@ Temps: [moyenne: 0.01 secondes, maximum: 0.02 secondes]
 ```
 Question 4
 -----------
-L'algorithme utilisé est le Hill-Climbing
+L'algorithme utilisé est le Hill-Climbing. Il est beaucoup moins efficace que Norvig, avec un taux de réussite de 44%. Il les fait résoudre à 50 sudokus par seconde ; une moyenne de 0.02 secondes pour chaque.
 ```
-Question #5
-
-
-(100 Sudoku)
-Résous: 100/100
-Temps: [moyenne: 0.00 secondes, maximum: 0.01 secondes]
-
-(1000 Sudoku)
-Résous: 100/100
-Temps: [moyenne: 0.00 secondes, maximum: 0.01 secondes]
-
-(95 Sudoku)
-Résous: 95/95
-Temps: [moyenne: 0.01 secondes, maximum: 0.07 secondes]
+Question #4
+Résous: 44/100 (100 Sudoku)
+Temps: [moyenne: 0.02 secondes, maximum: 0.08 secondes]
 ```
 
 Question 5

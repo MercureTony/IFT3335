@@ -180,6 +180,7 @@ def shuffled(seq):
 ############ Simulated annealing ############
 
 ## Section 3.3, Simulated Annealing(Lewis)
+## http://aima.cs.berkeley.edu/python/search.html
 ## https://en.wikipedia.org/wiki/Simulated_annealing
 ## https://github.com/aimacode/aima-pseudocode/blob/master/md/Simulated-Annealing.md
 

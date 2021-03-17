@@ -1,4 +1,4 @@
-## Solve Every Sudoku Puzzle - Question 1
+## Solve Every Sudoku Puzzle - Question 5
 
 ## See http://norvig.com/sudoku.html
 
@@ -11,7 +11,6 @@
 ##   grid is a grid,e.g. 81 non-blank chars, e.g. starting with '.18...7...
 ##   values is a dict of possible values, e.g. {'A1':'12349', 'A2':'8', ...}
 
-from random import randrange
 import math
 
 def cross(A, B):
@@ -111,6 +110,17 @@ def eliminate(values, s, d):
 
 ############### Constraint propagation (in the boxes) for initialization of Hill Climbing ########################
 
+def initialize_hill_climbing(values):
+    "En tenant compte seulement des boites, remplit chaque carre, avec au hasard, un des chiffre possibles"
+    new_values = values.copy()
+    #tant quil y a un carre vide
+    while max(len(new_values[s]) for s in squares) > 1:
+        ## Chose the unfilled square s with the fewest possibilities
+        s = min(s for s in squares if len(new_values[s]) > 1)
+        d = random.choice(new_values[s])
+        assign_HC(new_values, s, d)
+    return new_values
+
 def assign_HC(values, s, d):
     """Eliminate all the other values (except d) from values[s] and propagate in the box.
     Return values, except return False if a contradiction is detected in the box."""
@@ -155,103 +165,7 @@ def display(values):
               for c in cols)
         if r in 'CF': print(line)
 
-
-################ Search ################
-
-def solve(grid): return search(parse_grid(grid))
-
-
-def search(values):
-    "Using depth-first search and propagation, try all possible values."
-    if values is False:
-        return False  ## Failed earlier
-    if all(len(values[s]) == 1 for s in squares):
-        return values  ## Solved!
-    ## Chose the unfilled square s with the fewest possibilities
-    n, s = min((len(values[s]), s) for s in squares if len(values[s]) > 1)
-    return some(search(assign(values.copy(), s, d))
-                for d in values[s])
-
-########################### Hill Climbing ##################################333333
-
-def solve_hill_climbing(grid):
-    #met le compteur a zero a chaque nouvelle grille de sudoku
-    global try_counter
-    try_counter = 0
-    values = parse_grid(grid)
-    return hill_climbing(initialize_hill_climbing(values))
-
-def initialize_hill_climbing(values):
-    "En tenant compte seulement des boites, remplit chaque carre, avec au hasard, un des chiffre possibles"
-    new_values = values.copy()
-    #tant quil y a un carre vide
-    while max(len(new_values[s]) for s in squares) > 1:
-        ## Chose the unfilled square s with the fewest possibilities
-        n, s = min((len(new_values[s]), s) for s in squares if len(new_values[s]) > 1)
-        random_index = randrange(0, len(new_values[s]))
-        d = new_values[s][random_index]
-        assign_HC(new_values, s, d)
-    return new_values
-
-
-def hill_climbing(values):
-    "Using Hill-Climbing, try to find a solution"
-    currentNode = values
-    while(True):
-        L = neighbors(currentNode)
-        nextEval = float("-inf")
-        nextNode = None
-        for x in L:
-            if (evaluation(x) > nextEval):
-                nextNode = x
-                nextEval = evaluation(x)
-        if nextEval <= evaluation(currentNode):
-            #Return current node since no better neighbors exist
-            return currentNode
-        #print(evaluation(nextNode))
-        currentNode = nextNode
-
-        global try_counter
-        try_counter += 1
-
-def neighbors(currentNode):
-    """retourne une liste des voisins du noeuds
-    les voisins sont les noeuds obtenus en echangeant les chiffres de deux carres appartenant a la meme boite (36 possibilites par boite)"""
-    neighbors = []
-    done = []
-    for s in squares:
-        newNode = currentNode.copy()
-        box = boxes[s] - set(done)
-        for s2 in box:
-            newNode[s], newNode[s2] = newNode[s2], newNode[s]
-            neighbors.append(newNode)
-        done.append(s)
-    return neighbors
-
-def evaluation(values):
-    # l'evaluation est egal a: 0 - nb de conflit sur les lignes et colonnes
-    conflicts = 0
-    for line in lines:
-        l = []
-        for s in line:
-            l.append(values[s])
-        conflicts += len(set(l)) - 9
-    for column in columns:
-        c = []
-        for s in column:
-            c.append(values[s])
-        conflicts += len(set(c)) - 9
-    return conflicts
-
-
 ################ Utilities ################
-
-def some(seq):
-    "Return some element of seq that is true."
-    for e in seq:
-        if e: return e
-    return False
-
 
 def from_file(filename, sep='\n'):
     "Parse a file into a list of strings, separated by sep."
@@ -267,9 +181,7 @@ def shuffled(seq):
 ############### Simulated annealing ##############
 
 def solve_simulated_annealing(grid):
-    #met le compteur a zero a chaque nouvelle grille de sudoku
-    values = parse_grid(grid)
-    return simulated_annealing(initialize_hill_climbing(values))
+    return simulated_annealing(initialize_hill_climbing(parse_grid(grid)))
 
 def simulated_annealing(values):
     current = values
@@ -299,6 +211,21 @@ def random_neighbor(current):
 def jump(probability):
     return random.random() < probability
 
+def evaluation(values):
+    # l'evaluation est egal a: 0 - nb de conflit sur les lignes et colonnes
+    conflicts = 0
+    for line in lines:
+        l = []
+        for s in line:
+            l.append(values[s])
+        conflicts += len(set(l)) - 9
+    for column in columns:
+        c = []
+        for s in column:
+            c.append(values[s])
+        conflicts += len(set(c)) - 9
+    return conflicts
+
 ################ System test ################
 
 import time, random
@@ -311,7 +238,7 @@ def solve_all(grids, name='', showif=0.0):
 
     def time_solve(grid):
         start = time.perf_counter()
-        values = solve(grid)
+        values = solve_simulated_annealing(grid)
         t = time.perf_counter() - start
         ## Display puzzles that take long enough
         if showif is not None and t > showif:
@@ -356,10 +283,6 @@ hard1 = '.....6....59.....82....8....45........3........6..3.54...325..6........
 if __name__ == '__main__':
     test()
     solve_all(from_file("100sudoku.txt"), "100sudoku", None)
-    # Simulated annealing
-    solution_sa = solve_simulated_annealing(grid2)
-    print(solved(solution_sa))
-    display(solution_sa)
     solve_all(from_file("top95.txt"), "sa", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)

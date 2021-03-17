@@ -268,13 +268,10 @@ def shuffled(seq):
 
 def solve_simulated_annealing(grid):
     #met le compteur a zero a chaque nouvelle grille de sudoku
-    global try_counter
-    try_counter = 0
     values = parse_grid(grid)
     return simulated_annealing(initialize_hill_climbing(values))
 
 def simulated_annealing(values):
-    global try_counter
     current = values
     t = 1
     alpha = 0.99
@@ -288,10 +285,8 @@ def simulated_annealing(values):
         deltaE = evaluation(next) - evaluation(current)
         if deltaE > 0:
             current = next
-            try_counter += 1
         elif jump(probability=math.exp(deltaE / t)):
             current = next
-            try_counter += 1
     return values #return current values if not solved after trying 10k neighbors
 
 def random_neighbor(current):
@@ -365,7 +360,7 @@ if __name__ == '__main__':
     solution_sa = solve_simulated_annealing(grid2)
     print(solved(solution_sa))
     display(solution_sa)
-    solve_all(from_file("100sudoku.txt"), "sa", None)
+    solve_all(from_file("top95.txt"), "sa", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("top95.txt"), "hard", None)

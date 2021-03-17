@@ -325,7 +325,7 @@ if __name__ == '__main__':
     solution_hc = solve_hill_climbing(grid2)
     solved(solution_hc)
     display(solution_hc)
-    solve_all(from_file("100sudoku.txt"), "hc", None)
+    solve_all(from_file("top95.txt"), "hc", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("top95.txt"), "hard", None)

@@ -3,6 +3,8 @@ Rapport TP1 – IFT3335
 
 Étienne Beaulé (20120318), Nicolas Soriano, Anthony Uyende (20117140)
 
+Le code pour chaque question est dans le fichier `sudokuN.py`, `N` étant le numéro de la question. C'est en Python3.
+
 Questions 1 & 2
 ---------------
 

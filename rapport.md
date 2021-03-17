@@ -26,6 +26,8 @@ Question 4
 L'algorithme utilisé est le Hill-Climbing
 ```
 Question #5
+
+
 (100 Sudoku)
 Résous: 100/100
 Temps: [moyenne: 0.00 secondes, maximum: 0.01 secondes]
@@ -54,5 +56,5 @@ Temps: [moyenne: 0.00 secondes, maximum: 0.02 secondes]
 
 (95 Sudoku)
 Résous: 95/95
-Temps: [moyenne: 0.01 secondes, maximum: 0.07 secondes]
+Temps: [moyenne: 0.02 secondes, maximum: 0.09 secondes]
 ```

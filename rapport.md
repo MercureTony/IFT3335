@@ -34,7 +34,17 @@ Temps: [moyenne: 0.02 secondes, maximum: 0.08 secondes]
 
 Question 5
 -----------
-L'algorithme utilisé est le Simulated Annealing. Tandis qu'il est plus lent que le Hill-Climbing, il peut résoudre plus de sudokus, mais pas autant ou à la même vitesse que (1) ni (2). En moyenne, seulement 5 sudokus par seconde, soit 0.17 secondes par sudoku, avec un maximum de 0.75 secondes.
+L'algorithme utilisé est le Simulated Annealing. 
+Nous remarquons qu'il est plus lent en terme d'exécution
+que le Hill-Climbing toutefois, il est plus optimal que ce dernier. D'autre part, en
+comparaison avec l'implémentation en (1) et (2), il est relativement moins rapide. 
+
+Par rapport aux performances, il résoud en moyenne seulement 5 sudokus 
+par seconde, soit 0.17 secondes par sudoku, avec un maximum de 0.75 secondes. Cela,
+varie beaucoup avec le temps `limit`. En effet, plus `limit` est petit, moins l'algorithme
+est performant tout en ayant un temps d'exécution relativement faible.
+
+La complexité est: `O(10kn^2)`
 ```
 Question #5
 Résous: 85/100

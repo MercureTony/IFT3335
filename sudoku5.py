@@ -11,7 +11,7 @@
 ##   grid is a grid,e.g. 81 non-blank chars, e.g. starting with '.18...7...
 ##   values is a dict of possible values, e.g. {'A1':'12349', 'A2':'8', ...}
 
-import math
+import math, time, random
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
@@ -22,17 +22,16 @@ digits = '123456789'
 rows = 'ABCDEFGHI'
 cols = digits
 squares = cross(rows, cols)
+columns = [cross(rows, c) for c in cols]
+lines = [cross(r, cols) for r in rows]
 unitlist = ([cross(rows, c) for c in cols] +
             [cross(r, cols) for r in rows] +
             [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')])
 units = dict((s, [u for u in unitlist if s in u])
              for s in squares)
-peers = dict((s, set(sum(units[s], [])) - set([s]))
-             for s in squares)
-
-columns = [cross(rows, c) for c in cols]
-lines = [cross(r, cols) for r in rows]
 boxes = dict((s, set(sum([units[s][2]],[]))-set([s]))
+             for s in squares)
+peers = dict((s, set(sum(units[s], [])) - set([s]))
              for s in squares)
 
 ################ Unit Tests ################
@@ -178,41 +177,45 @@ def shuffled(seq):
     random.shuffle(seq)
     return seq
 
-############### Simulated annealing ##############
+############ Simulated annealing ############
+
+## Section 3.3, Simulated Annealing(Lewis)
+## https://en.wikipedia.org/wiki/Simulated_annealing
+## https://github.com/aimacode/aima-pseudocode/blob/master/md/Simulated-Annealing.md
 
 def solve_simulated_annealing(grid):
     return simulated_annealing(initialize_hill_climbing(parse_grid(grid)))
 
+## Simulated Annealing algorithm
 def simulated_annealing(values):
     current = values
     t = 1
+    k = 4
     alpha = 0.99
-    for i in range(10000):
+    limit = 10**k
+    for i in range(limit):
         t = alpha * t
-        if t == 0:
-            return current
         if solved(current):
             return current
-        next = random_neighbor(current)
-        deltaE = evaluation(next) - evaluation(current)
-        if deltaE > 0:
+        if t == 0:
+            return current
+        next = random_neighbors(current)
+        delta = evaluation(next) - evaluation(current)
+        if delta > 0:
             current = next
-        elif jump(probability=math.exp(deltaE / t)):
+        elif jump(probability=math.exp(delta / t)):
             current = next
-    return values #return current values if not solved after trying 10k neighbors
+    return values ## If after trying 10k neighbors it returns the current values
 
-def random_neighbor(current):
-    newNode = current.copy()
+def random_neighbors(current):
+    neighbor = current.copy()
     s = random.choice(squares)
-    s2 = random.sample(boxes[s],1)[0]
-    newNode[s], newNode[s2] = newNode[s2], newNode[s]
-    return newNode
+    s_prime = random.sample(boxes[s], 1)[0]
+    neighbor[s], neighbor[s_prime] = neighbor[s_prime], neighbor[s]
+    return neighbor
 
-def jump(probability):
-    return random.random() < probability
-
+## The evaluation is equal to: 0 - number of conflicts on rows and columns
 def evaluation(values):
-    # l'evaluation est egal a: 0 - nb de conflit sur les lignes et colonnes
     conflicts = 0
     for line in lines:
         l = []
@@ -226,9 +229,11 @@ def evaluation(values):
         conflicts += len(set(c)) - 9
     return conflicts
 
-################ System test ################
+## Acceptancce propability
+def jump(probability):
+    return random.random() < probability
 
-import time, random
+################ System test ################
 
 
 def solve_all(grids, name='', showif=0.0):

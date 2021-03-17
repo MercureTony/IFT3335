@@ -1,7 +1,9 @@
 Rapport TP1 – IFT3335
 =====================
 
-Étienne Beaulé (20120318), Nicolas Soriano, Anthony Uyende
+Étienne Beaulé (20120318), Nicolas Soriano (20127789), Anthony Uyende
+
+Note préliminaire: Les résultats sont différents pour du même code selon la question, dù à l'utilisation d'ordinateurs différents. Les résultats ayant une importance pour une question seront donc précisés dans celle-ci.
 
 Questions 1 & 2
 ---------------
@@ -11,3 +13,29 @@ Le code fourni fonctionnait bien à part le chronomètre pour les tests qui éta
 Sans modification substantielle (la question 1), tous les sudokus ont été réussis avec une vitesse moyenne de 0.004 secondes, avec un taux de 252 sudokus par seconde. Par contre, en choississant directement une case et valeur avec `random` (question 2), seulement 54 des 100 sudokus ont été résolus, avec une vitesse moyenne un peu plus bas à 0.003 secondes et un taux de 288 sudokus par seconde.
 
 Tandis que la modification à l'algorithme dans (2) simplifie la recherche, ça n'aide pas avec la complexité vu que la recherche passe encore, mais avec moins de réussite.
+
+Question 3
+----------
+
+Deux heuristiques supplémentaires ont été utilisées: celle de la variable la plus contraignante et celle de la valeur la moins contraignante.
+Une source qui a été utilisée principalement est "Solving Sudoku with AI", towardsDataScience, localisé à: https://towardsdatascience.com/solving-sudoku-with-ai-d6008993c7de
+
+L'heuristique de la variable la plus contraignante correspond à choisir la variable qui apparaît dans le plus de contraintes. Dans un problème de programmation sous contraintes standard cela a une utilité mais dans un sudoku chaque variable (case) a autant de contraintes (autant de pairs).
+On peut donc modifier l'heuristique pour choisir la variable qui est "encore" la plus contraignante, soit celle qui a encore le plus de pairs non-fixés, afin de l'adapter au sudoku (standard).
+On peut aussi modifier cet heuristique pour comptabiliser, au lieu du nombre de variables contraintes, le nombre de valeurs ^possibles de chaque variable qu'on contraindrait a, et essayer de maximiser cela (max).
+On peut de même maximiser le nombre de valeurs possibles que chaque variable qu'on contraindrait a en commun avec la variable qu'on choisit et maximiser ceci (commun).
+
+L'heuristique de la valeur la moins contraignante, elle, consiste à assigner la valeur la moins présente parmi les possibilités pour les pairs.
+
+Chaque combinaison de version de la variable la plus contraignante et de la valeur la moins contraignante permet de créer une version avec des heuristiques différentes, qu'on peut comparer.
+
+On a donc 6 versions à tester en plus de la version initiale.
+
+Après plusieurs exécutions, les résultats semblent être les suivants:
+
+
+
+
+On a donc que la combinaisons heuristique "binaire" et valeur la moins contraignante semble être la meilleure.
+
+C'est donc celle-ci qui est implémenteée dans le fichier sudoku3.py

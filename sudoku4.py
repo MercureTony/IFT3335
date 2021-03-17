@@ -11,7 +11,8 @@
 ##   grid is a grid,e.g. 81 non-blank chars, e.g. starting with '.18...7...
 ##   values is a dict of possible values, e.g. {'A1':'12349', 'A2':'8', ...}
 
-import time, random
+import random
+import time
 
 
 def cross(A, B):

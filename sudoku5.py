@@ -11,7 +11,10 @@
 ##   grid is a grid,e.g. 81 non-blank chars, e.g. starting with '.18...7...
 ##   values is a dict of possible values, e.g. {'A1':'12349', 'A2':'8', ...}
 
-import math, time, random
+import math
+import random
+import time
+
 
 def cross(A, B):
     "Cross product of elements in A and elements in B."
@@ -29,10 +32,11 @@ unitlist = ([cross(rows, c) for c in cols] +
             [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')])
 units = dict((s, [u for u in unitlist if s in u])
              for s in squares)
-boxes = dict((s, set(sum([units[s][2]],[]))-set([s]))
+boxes = dict((s, set(sum([units[s][2]], [])) - set([s]))
              for s in squares)
 peers = dict((s, set(sum(units[s], [])) - set([s]))
              for s in squares)
+
 
 ################ Unit Tests ################
 
@@ -107,51 +111,36 @@ def eliminate(values, s, d):
                 return False
     return values
 
-############### Constraint propagation (in the boxes) for initialization of Hill Climbing ########################
+
+def evaluation(values):
+    """The evaluation is equal to: 0 - number of conflicts on rows and columns"""
+    conflicts = 0  # Number of conflicts (-inf < conflicts =< 0)
+    for line in lines:  # We run through each row
+        filled_line = []
+        for s in line:  # We run through the row_i
+            filled_line.append(values[s])  # We append the value of box_ij
+        conflicts += len(set(filled_line)) - len(rows)  # We decrement the number of unfilled box in row
+    for column in columns:  # We run through each column
+        filled_column = []
+        for s in column:  # We run through the column_j
+            filled_column.append(values[s])  # We append the value of box_ij
+        conflicts += len(set(filled_column)) - len(cols)  # We decrement the number of unfilled box in column
+    return conflicts
+
+
+############### Hill Climbing ###################
 
 def initialize_hill_climbing(values):
-    "En tenant compte seulement des boites, remplit chaque carre, avec au hasard, un des chiffre possibles"
-    new_values = values.copy()
-    #tant quil y a un carre vide
-    while max(len(new_values[s]) for s in squares) > 1:
-        ## Chose the unfilled square s with the fewest possibilities
-        s = min(s for s in squares if len(new_values[s]) > 1)
-        d = random.choice(new_values[s])
-        assign_HC(new_values, s, d)
-    return new_values
+    """Taking into account only the boxes, fill each square with one of the possible numbers at random"""
+    updated_box = values.copy()
+    # As long as there is an empty square
+    while max(len(updated_box[s]) for s in squares) > 1:
+        # Choose the unfilled square s with the fewest possibilities
+        n, s = min((len(updated_box[s]), s) for s in squares if len(updated_box[s]) > 1)
+        d = random.choice(updated_box[s])
+        assign(updated_box, s, d)
+    return updated_box
 
-def assign_HC(values, s, d):
-    """Eliminate all the other values (except d) from values[s] and propagate in the box.
-    Return values, except return False if a contradiction is detected in the box."""
-    other_values = values[s].replace(d, '')
-    if all(eliminate_HC(values, s, d2) for d2 in other_values):
-        return values
-    else:
-        return False
-
-def eliminate_HC(values, s, d):
-    """Eliminate d from values[s]; propagate when values or places <= 2.
-    Return values, except return False if a contradiction is detected."""
-    if d not in values[s]:
-        return values ## Already eliminated
-    values[s] = values[s].replace(d,'')
-    ## (1) If a square s is reduced to one value d2, then eliminate d2 from the box.
-    if len(values[s]) == 0:
-        return False ## Contradiction: removed last value
-    elif len(values[s]) == 1:
-        d2 = values[s]
-        if not all(eliminate_HC(values, s2, d2) for s2 in boxes[s]):
-            return False
-    ## (2) If a unit u is reduced to only one place for a value d, then put it there.
-    for u in [units[s][2]]:
-        dplaces = [s for s in u if d in values[s]]
-        if len(dplaces) == 0:
-            return False ## Contradiction: no place for this value
-        elif len(dplaces) == 1:
-            # d can only be in one place in unit; assign it there
-            if not assign_HC(values, dplaces[0], d):
-                return False
-    return values
 
 ################ Display as 2-D grid ################
 
@@ -163,6 +152,7 @@ def display(values):
         print(''.join(values[r + c].center(width) + ('|' if c in '36' else ''))
               for c in cols)
         if r in 'CF': print(line)
+
 
 ################ Utilities ################
 
@@ -177,6 +167,7 @@ def shuffled(seq):
     random.shuffle(seq)
     return seq
 
+
 ############ Simulated annealing ############
 
 ## Section 3.3, Simulated Annealing(Lewis)
@@ -187,13 +178,14 @@ def shuffled(seq):
 def solve_simulated_annealing(grid):
     return simulated_annealing(initialize_hill_climbing(parse_grid(grid)))
 
+
 def simulated_annealing(values):
     """Simulated Annealing algorithm"""
     current = values
     t = 1
-    k = 4
+    k = 3
     alpha = 0.99
-    limit = 10**k
+    limit = 10 ** k
     for i in range(limit):
         t = alpha * t
         if solved(current):
@@ -206,7 +198,8 @@ def simulated_annealing(values):
             current = next
         elif jump(probability=math.exp(delta / t)):
             current = next
-    return values ## If after trying 10k neighbors it returns the current values
+    return values  # If after trying 10k neighbors it returns the current values
+
 
 def random_neighbors(current):
     neighbor = current.copy()
@@ -215,24 +208,11 @@ def random_neighbors(current):
     neighbor[s], neighbor[s_prime] = neighbor[s_prime], neighbor[s]
     return neighbor
 
-def evaluation(values):
-    """The evaluation is equal to: 0 - number of conflicts on rows and columns"""
-    conflicts = 0
-    for line in lines:
-        l = []
-        for s in line:
-            l.append(values[s])
-        conflicts += len(set(l)) - 9
-    for column in columns:
-        c = []
-        for s in column:
-            c.append(values[s])
-        conflicts += len(set(c)) - 9
-    return conflicts
 
 def jump(probability):
     """Acceptance probability"""
     return random.random() < probability
+
 
 ################ System test ################
 

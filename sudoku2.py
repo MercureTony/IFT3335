@@ -119,7 +119,8 @@ def search(values):
         return values ## Solved!
     ## Chose a random unfilled square s
     s = random.choice([s for s in squares if len(values[s]) > 1])
-    return search(assign(values.copy(), s, random.choice(values[s])))
+    return some(search(assign(values.copy(), s, d))
+                for d in values[s])
 
 ################ Utilities ################
 

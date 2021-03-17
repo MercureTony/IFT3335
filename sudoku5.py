@@ -186,8 +186,8 @@ def shuffled(seq):
 def solve_simulated_annealing(grid):
     return simulated_annealing(initialize_hill_climbing(parse_grid(grid)))
 
-## Simulated Annealing algorithm
 def simulated_annealing(values):
+    """Simulated Annealing algorithm"""
     current = values
     t = 1
     k = 4
@@ -214,8 +214,8 @@ def random_neighbors(current):
     neighbor[s], neighbor[s_prime] = neighbor[s_prime], neighbor[s]
     return neighbor
 
-## The evaluation is equal to: 0 - number of conflicts on rows and columns
 def evaluation(values):
+    """The evaluation is equal to: 0 - number of conflicts on rows and columns"""
     conflicts = 0
     for line in lines:
         l = []
@@ -229,8 +229,8 @@ def evaluation(values):
         conflicts += len(set(c)) - 9
     return conflicts
 
-## Acceptancce propability
 def jump(probability):
+    """Acceptance probability"""
     return random.random() < probability
 
 ################ System test ################

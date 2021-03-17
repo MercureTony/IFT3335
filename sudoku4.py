@@ -1,4 +1,4 @@
-## Solve Every Sudoku Puzzle - Question 1
+## Solve Every Sudoku Puzzle - Question 4
 
 ## See http://norvig.com/sudoku.html
 
@@ -155,30 +155,10 @@ def display(values):
         if r in 'CF': print(line)
 
 
-################ Search ################
-
-def solve(grid): return search(parse_grid(grid))
-
-
-def search(values):
-    "Using depth-first search and propagation, try all possible values."
-    if values is False:
-        return False  ## Failed earlier
-    if all(len(values[s]) == 1 for s in squares):
-        return values  ## Solved!
-    ## Chose the unfilled square s with the fewest possibilities
-    n, s = min((len(values[s]), s) for s in squares if len(values[s]) > 1)
-    return some(search(assign(values.copy(), s, d))
-                for d in values[s])
-
 ########################### Hill Climbing ##################################333333
 
 def solve_hill_climbing(grid):
-    #met le compteur a zero a chaque nouvelle grille de sudoku
-    global try_counter
-    try_counter = 0
-    values = parse_grid(grid)
-    return hill_climbing(initialize_hill_climbing(values))
+    return hill_climbing(initialize_hill_climbing(parse_grid(grid)))
 
 def initialize_hill_climbing(values):
     "En tenant compte seulement des boites, remplit chaque carre, avec au hasard, un des chiffre possibles"
@@ -187,8 +167,7 @@ def initialize_hill_climbing(values):
     while max(len(new_values[s]) for s in squares) > 1:
         ## Chose the unfilled square s with the fewest possibilities
         n, s = min((len(new_values[s]), s) for s in squares if len(new_values[s]) > 1)
-        random_index = randrange(0, len(new_values[s]))
-        d = new_values[s][random_index]
+        d = random.choice(new_values[s])
         assign_HC(new_values, s, d)
     return new_values
 
@@ -210,8 +189,6 @@ def hill_climbing(values):
         #print(evaluation(nextNode))
         currentNode = nextNode
 
-        global try_counter
-        try_counter += 1
 
 def neighbors(currentNode):
     """retourne une liste des voisins du noeuds
@@ -245,12 +222,6 @@ def evaluation(values):
 
 ################ Utilities ################
 
-def some(seq):
-    "Return some element of seq that is true."
-    for e in seq:
-        if e: return e
-    return False
-
 
 def from_file(filename, sep='\n'):
     "Parse a file into a list of strings, separated by sep."
@@ -276,7 +247,7 @@ def solve_all(grids, name='', showif=0.0):
 
     def time_solve(grid):
         start = time.perf_counter()
-        values = solve(grid)
+        values = solve_hill_climbing(grid)
         t = time.perf_counter() - start
         ## Display puzzles that take long enough
         if showif is not None and t > showif:
@@ -321,11 +292,7 @@ hard1 = '.....6....59.....82....8....45........3........6..3.54...325..6........
 if __name__ == '__main__':
     test()
     solve_all(from_file("100sudoku.txt"), "100sudoku", None)
-    # Hill Climbing
-    solution_hc = solve_hill_climbing(grid2)
-    solved(solution_hc)
-    display(solution_hc)
-    solve_all(from_file("top95.txt"), "hc", None)
+    solve_all(from_file("top95.txt"), "top95", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("easy50.txt", '========'), "easy", None)
     # solve_all(from_file("top95.txt"), "hard", None)

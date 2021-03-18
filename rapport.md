@@ -12,7 +12,7 @@ Le code fourni fonctionnait bien à part le chronomètre pour les tests qui éta
 
 Sans modification substantielle (la question 1), tous les sudokus ont été réussis avec une vitesse moyenne de 0.004 secondes, avec un taux de 252 sudokus par seconde. Par contre, en choississant directement une case et valeur avec `random` (question 2), toutes les sudokus ont été résolus, avec une vitesse moyenne pareil à 0.0045 secondes mais un taux plus faible à 222 sudokus par seconde.
 
-Tandis que la modification à l'algorithme dans (2) simplifie la recherche, ça n'aide pas avec la complexité vu que la recherche passe encore.
+Tandis que la modification à l'algorithme dans (2) simplifie le code, ça n'aide pas avec la complexité de l'exécution vu que la temps d'exécution est plus important.
 
 ```
 Question #1
@@ -83,3 +83,12 @@ Question #5
 Résous: 85/100
 Temps: [moyenne: 0.17 secondes, maximum: 0.75 secondes]
 ```
+
+Question 6
+----------
+
+On constate que le classement des algorithmes en fonction de leur efficacité et celui en fonction du nombre de bonnes réponses sont identiques.
+
+En effet, l'algorithme de hill-climbing est et moins efficace et donne de moins bons résultats que le recuit simulé qui lui-même est moins bon que l'algorithme de Norvig avec aléatoire qui est moins bon que l'algorithme de Norvig initial qui est moins bon que l'algorithme de Norvig avec des heuristiques supplémentaires.
+
+
